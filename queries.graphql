@@ -1,0 +1,210 @@
+query fetchLogin {
+  viewer {
+    login
+  }
+}
+
+query fetchPullRequests($owner: String!, $name: String!, $limit: Int!, $states: [PullRequestState!]) {
+  repository(owner: $owner, name: $name) {
+    pullRequests(first: $limit, states: $states, orderBy: {field: CREATED_AT, direction: DESC}) {
+      edges {
+        node {
+          author {
+            login
+          }
+          baseRefOid
+          number
+          title
+          createdAt
+          headRef {
+            name
+          }
+          comments {
+            totalCount
+          }
+          repository {
+            name
+          }
+          reviews(first: 100) {
+            edges {
+              node {
+                author {
+                  login
+                }
+                body
+                comments {
+                  totalCount
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query fetchPullRequestID($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      id
+    }
+  }
+}
+
+query fetchMyPullRequests($limit: Int!) {
+  viewer {
+    pullRequests(first: $limit, states: OPEN, orderBy: {field: CREATED_AT, direction: DESC}) {
+      edges {
+        node {
+          author {
+            login
+          }
+          number
+          title
+          createdAt
+          headRef {
+            name
+          }
+          comments {
+            totalCount
+          }
+          repository {
+            name
+          }
+          reviews(first: 100) {
+            edges {
+              node {
+                author {
+                  login
+                }
+                body
+                comments {
+                  totalCount
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query fetchMyPullRequestReviewQueue($query: String!, $limit: Int!) {
+  search(query: $query, type: ISSUE, first: $limit) {
+    edges {
+      node {
+        ... on PullRequest {
+          __typename
+          author {
+            login
+          }
+          number
+          title
+          createdAt
+          headRef {
+            name
+          }
+          comments {
+            totalCount
+          }
+          repository {
+            name
+          }
+          reviews(first: 100) {
+            edges {
+              node {
+                author {
+                  login
+                }
+                body
+                comments {
+                  totalCount
+                }
+              }
+            }
+          }
+          timelineItems(last: 10) {
+            nodes {
+              __typename
+              ... on ReviewRequestedEvent {
+                createdAt
+                requestedReviewer {
+                  ... on User {
+                    __typename
+                    login
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query fetchConversation($number: Int!, $owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      title
+      number
+      body
+      author {
+        login
+        ... on User {
+          __typename
+          name
+        }
+      }
+      comments(first: 100) {
+        edges {
+          node {
+            author {
+              login
+            }
+            body
+            createdAt
+          }
+        }
+      }
+      createdAt
+      number
+      repository {
+        name
+      }
+      reviews(first: 100) {
+        edges {
+          node {
+            author {
+              login
+            }
+            body
+            createdAt
+            comments(first: 100) {
+              edges {
+                node {
+                  author {
+                    login
+                  }
+                  body
+                  createdAt
+                  diffHunk
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation markAsReady($input: MarkPullRequestReadyForReviewInput!) {
+  markPullRequestReadyForReview(input: $input) {
+    pullRequest {
+      id
+    }
+  }
+}
