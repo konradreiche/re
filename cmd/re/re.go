@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	commander *re.Commands
+	commander *re.Command
 	pr        int
 	lines     int
 	message   string
@@ -87,7 +87,7 @@ var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List pull requests",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return commander.PrintPullRequests(cmd.Context(), lines, false)
+		return commander.ListPullRequests(cmd.Context(), lines, false)
 	},
 }
 
@@ -133,7 +133,7 @@ func newCommander(cmd *cobra.Command, args []string) error {
 	}
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
-	commands, err := re.NewCommands(cmd.Context())
+	commands, err := re.NewCommand(cmd.Context(), re.NewConfig())
 	if err != nil {
 		return err
 	}

@@ -7,14 +7,14 @@ import (
 	"os/exec"
 )
 
-type Commands struct {
+type Command struct {
 	client *Client
 	org    string
 	name   string
 }
 
-func NewCommands(ctx context.Context) (*Commands, error) {
-	client, err := NewClient(ctx)
+func NewCommand(ctx context.Context, config Config) (*Command, error) {
+	client, err := NewClient(ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -22,34 +22,34 @@ func NewCommands(ctx context.Context) (*Commands, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Commands{
+	return &Command{
 		client: client,
 		org:    org,
 		name:   name,
 	}, nil
 }
 
-func (c *Commands) ApprovePullRequest(ctx context.Context, pr int, message string) error {
+func (c *Command) ApprovePullRequest(ctx context.Context, pr int, message string) error {
 	return c.client.ReviewPullRequest(ctx, c.org, c.name, pr, "APPROVE", message)
 }
 
-func (c *Commands) CommentPullRequest(ctx context.Context, pr int, message string) error {
+func (c *Command) CommentPullRequest(ctx context.Context, pr int, message string) error {
 	return c.client.ReviewPullRequest(ctx, c.org, c.name, pr, "COMMENT", message)
 }
 
-func (c *Commands) PrintDiff(ctx context.Context, pr int) error {
+func (c *Command) PrintDiff(ctx context.Context, pr int) error {
 	return c.client.FetchDiff(ctx, c.org, c.name, pr, false)
 }
 
-func (c *Commands) MarkPullRequestReady(ctx context.Context, pr int) error {
+func (c *Command) MarkPullRequestReady(ctx context.Context, pr int) error {
 	return c.client.MarkAsReady(ctx, c.org, c.name, pr)
 }
 
-func (c *Commands) PrintComments(ctx context.Context, pr int) error {
+func (c *Command) PrintComments(ctx context.Context, pr int) error {
 	return c.client.FetchComments(ctx, pr, c.org, c.name)
 }
 
-func (c *Commands) PrintPendingReviews(ctx context.Context, limit int, includeTeamReview bool) error {
+func (c *Command) PrintPendingReviews(ctx context.Context, limit int, includeTeamReview bool) error {
 	query := "is:pr is:open user-review-requested:@me"
 	if includeTeamReview {
 		query = "is:pr is:open review-requested:@me"
@@ -57,19 +57,19 @@ func (c *Commands) PrintPendingReviews(ctx context.Context, limit int, includeTe
 	return c.client.FetchMyPullRequestReviewQueue(ctx, query, c.name, limit)
 }
 
-func (c *Commands) PrintPullRequests(ctx context.Context, limit int, includeClosed bool) error {
+func (c *Command) ListPullRequests(ctx context.Context, limit int, includeClosed bool) error {
 	return c.client.FetchPullRequests(ctx, limit, c.org, c.name, includeClosed)
 }
 
-func (c *Commands) PrintMyPullRequests(ctx context.Context, limit int) error {
+func (c *Command) PrintMyPullRequests(ctx context.Context, limit int) error {
 	return c.client.FetchMyPullRequests(ctx, limit)
 }
 
-func (c *Commands) CheckoutPullRequest(ctx context.Context, pr int) error {
+func (c *Command) CheckoutPullRequest(ctx context.Context, pr int) error {
 	return CheckoutPullRequest(pr)
 }
 
-func (c *Commands) OpenPullRequest(ctx context.Context, pr int) error {
+func (c *Command) OpenPullRequest(ctx context.Context, pr int) error {
 	endpoint := "https://github.com"
 	if ghe := os.Getenv("GITHUB_ENTERPRISE_URL"); ghe != "" {
 		endpoint = ghe
@@ -81,7 +81,7 @@ func (c *Commands) OpenPullRequest(ctx context.Context, pr int) error {
 	return nil
 }
 
-func (c *Commands) CreatePullRequest(ctx context.Context) error {
+func (c *Command) CreatePullRequest(ctx context.Context) error {
 	if err := PushToOrigin(); err != nil {
 		return err
 	}
@@ -106,6 +106,6 @@ func (c *Commands) CreatePullRequest(ctx context.Context) error {
 	})
 }
 
-func (c *Commands) PushBranch(ctx context.Context) error {
+func (c *Command) PushBranch(ctx context.Context) error {
 	return UpdateOrigin()
 }

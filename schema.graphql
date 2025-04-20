@@ -43129,7 +43129,7 @@ type PushAllowanceEdge {
 """
 The query root of GitHub's GraphQL interface.
 """
-type Query implements Node {
+type RootQuery implements Node {
   """
   Look up a code of conduct by its key
   """
@@ -43401,7 +43401,7 @@ type Query implements Node {
   Workaround for re-exposing the root query object. (Refer to
   https://github.com/facebook/relay/issues/112 for more information.)
   """
-  relay: Query!
+  relay: RootQuery!
 
   """
   Lookup a given repository by the owner and repository name.

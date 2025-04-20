@@ -1,0 +1,188 @@
+interface Node {
+  id: ID!
+}
+
+type User implements Actor {
+  login: String!
+  name: String
+}
+
+type Repository implements Node {
+  id: ID!
+  name: String!
+  pullRequests(
+    after: String
+    baseRefName: String
+    before: String
+    first: Int
+    headRefName: String
+    labels: [String!]
+    last: Int
+    orderBy: IssueOrder
+    states: [PullRequestState!]
+  ): PullRequestConnection!
+}
+
+input IssueOrder {
+  direction: OrderDirection!
+  field: IssueOrderField!
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+enum IssueOrderField {
+  COMMENTS
+  CREATED_AT
+  UPDATED_AT
+}
+
+enum PullRequestState {
+  CLOSED
+  MERGED
+  OPEN
+}
+
+type PullRequestConnection {
+  edges: [PullRequestEdge]
+  nodes: [PullRequest]
+  totalCount: Int!
+}
+
+type PullRequestEdge {
+  cursor: String!
+  node: PullRequest
+}
+
+interface Actor {
+  login: String!
+}
+
+scalar GitObjectID
+scalar DateTime
+
+type Ref implements Node {
+  id: ID!
+  name: String!
+}
+
+input IssueCommentOrder {
+  direction: OrderDirection!
+  field: IssueCommentOrderField!
+}
+
+enum IssueCommentOrderField {
+  UPDATED_AT
+}
+
+type IssueCommentConnection {
+  totalCount: Int!
+}
+
+enum PullRequestReviewState {
+  APPROVED
+  CHANGES_REQUESTED
+  COMMENTED
+  DISMISSED
+  PENDING
+}
+
+type PullRequestReviewConnection {
+  edges: [PullRequestReviewEdge]
+}
+
+type PullRequestReviewEdge {
+  node: PullRequestReview
+}
+
+type PullRequestReview implements Node {
+  author: Actor
+  body: String!
+  comments(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): PullRequestReviewCommentConnection!
+  createdAt: DateTime!
+  id: ID!
+}
+
+type PullRequestReviewCommentConnection {
+  edges: [PullRequestReviewCommentEdge]
+  totalCount: Int!
+}
+
+type PullRequestReviewCommentEdge {
+  node: PullRequestReviewComment
+}
+
+type PullRequestReviewComment {
+  author: Actor
+  body: String!
+  createdAt: DateTime!
+  diffHunk: String!
+}
+
+type PullRequest implements Node {
+  id: ID!
+  author: Actor
+  baseRefOid: GitObjectID!
+  number: Int!
+  title: String!
+  createdAt: DateTime!
+  headRef: Ref
+  comments(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    orderBy: IssueCommentOrder
+  ): IssueCommentConnection!
+  repository: Repository!
+  reviews(
+    after: String
+    author: String
+    before: String
+    first: Int
+    last: Int
+    states: [PullRequestReviewState!]
+  ): PullRequestReviewConnection
+}
+
+enum SearchType {
+  DISCUSSION
+  ISSUE
+  REPOSITORY
+  USER
+}
+
+union SearchResultItem = PullRequest | Repository | User
+
+type SearchResultItemConnection {
+  edges: [SearchResultItemEdge]
+}
+
+type SearchResultItemEdge {
+  node: SearchResultItem
+}
+
+type Query {
+  repository(
+    followRenames: Boolean = true
+    name: String!
+    owner: String!
+  ): Repository
+
+  search(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    query: String!
+    type: SearchType!
+  ): SearchResultItemConnection!
+  viewer: User!
+}

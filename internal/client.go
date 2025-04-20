@@ -9,7 +9,6 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"os"
 	"sort"
 	"time"
 
@@ -23,25 +22,17 @@ type Client struct {
 	gql      *gqlclient.Client
 }
 
-func NewClient(ctx context.Context) (*Client, error) {
-	endpoint := "https://api.github.com"
-	restEndpoint := "https://api.github.com"
-	accessToken := os.Getenv("GH_TOKEN")
-	if ghe := os.Getenv("GITHUB_ENTERPRISE_URL"); ghe != "" {
-		restEndpoint = ghe + "/api/v3"
-		endpoint = ghe + "/api"
-		accessToken = os.Getenv("GH_ENTERPRISE_TOKEN")
-	}
+func NewClient(ctx context.Context, config Config) (*Client, error) {
 	client := &http.Client{
 		Transport: &authenticatedTransport{
 			transport:   http.DefaultTransport,
-			accessToken: accessToken,
+			accessToken: config.AccessToken,
 		},
 	}
 	result := &Client{
-		endpoint: restEndpoint,
+		endpoint: config.RESTEndpoint,
 		client:   client,
-		gql:      gqlclient.New(endpoint+"/graphql", client),
+		gql:      gqlclient.New(config.Endpoint+"/graphql", client),
 	}
 	user, err := FetchLogin(result.gql, ctx)
 	if err != nil {
