@@ -59,7 +59,7 @@ var openCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	PreRunE: parseIntArg,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return commander.ApprovePullRequest(cmd.Context(), pr, message)
+		return commander.OpenPullRequest(cmd.Context(), pr)
 	},
 }
 
