@@ -27,7 +27,7 @@ func NewClient(ctx context.Context) (*Client, error) {
 	endpoint := "https://api.github.com"
 	accessToken := os.Getenv("GH_TOKEN")
 	if ghe := os.Getenv("GITHUB_ENTERPRISE_URL"); ghe != "" {
-		endpoint = ghe + "/api"
+		endpoint = ghe + "/api/v3"
 		accessToken = os.Getenv("GH_ENTERPRISE_TOKEN")
 	}
 	client := &http.Client{
@@ -202,7 +202,7 @@ func (c *Client) CreatePullRequest(ctx context.Context, owner, repository string
 		return err
 	}
 	url := c.endpoint + "/repos/" + owner + "/" + repository + "/pulls"
-	resp, err := c.client.Post(url, "application/vnd.github+json", &buf)
+	resp, err := c.client.Post(url, "application/vnd.github.v3+json", &buf)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ type authenticatedTransport struct {
 }
 
 func (t *authenticatedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Accept", "application/vnd.github+json")
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
 	req.Header.Add("Authorization", "Bearer "+t.accessToken)
 	return t.transport.RoundTrip(req)
 }
