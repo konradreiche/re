@@ -111,11 +111,11 @@ var showCmd = &cobra.Command{
 	},
 }
 
-var todoCmd = &cobra.Command{
-	Use:   "todo",
+var pendingCmd = &cobra.Command{
+	Use:   "pending",
 	Short: "Show pending pull request reviews",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return commander.PrintMyPullRequests(cmd.Context(), lines)
+		return commander.PrintPendingReviews(cmd.Context(), lines, false)
 	},
 }
 
@@ -152,7 +152,7 @@ func main() {
 	rootCmd.AddCommand(checkoutCmd)
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(approveCmd)
-	rootCmd.AddCommand(todoCmd)
+	rootCmd.AddCommand(pendingCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(showCmd)
