@@ -25,9 +25,11 @@ type Client struct {
 
 func NewClient(ctx context.Context) (*Client, error) {
 	endpoint := "https://api.github.com"
+	restEndpoint := "https://api.github.com"
 	accessToken := os.Getenv("GH_TOKEN")
 	if ghe := os.Getenv("GITHUB_ENTERPRISE_URL"); ghe != "" {
-		endpoint = ghe + "/api/v3"
+		restEndpoint = ghe + "/api/v3"
+		endpoint = ghe + "/api"
 		accessToken = os.Getenv("GH_ENTERPRISE_TOKEN")
 	}
 	client := &http.Client{
@@ -37,7 +39,7 @@ func NewClient(ctx context.Context) (*Client, error) {
 		},
 	}
 	result := &Client{
-		endpoint: endpoint,
+		endpoint: restEndpoint,
 		client:   client,
 		gql:      gqlclient.New(endpoint+"/graphql", client),
 	}
