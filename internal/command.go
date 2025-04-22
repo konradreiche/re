@@ -105,3 +105,7 @@ func (c *Commands) CreatePullRequest(ctx context.Context) error {
 		Draft: true,
 	})
 }
+
+func (c *Commands) PushBranch(ctx context.Context) error {
+	return UpdateOrigin()
+}

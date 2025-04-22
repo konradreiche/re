@@ -91,6 +91,14 @@ var listCmd = &cobra.Command{
 	},
 }
 
+var pushCmd = &cobra.Command{
+	Use:   "push",
+	Short: "Updates the branch using --force-with-lease",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return commander.PushBranch(cmd.Context())
+	},
+}
+
 var readyCmd = &cobra.Command{
 	Use:     "ready",
 	Short:   "Mark a pull request as ready for review",
@@ -111,9 +119,9 @@ var showCmd = &cobra.Command{
 	},
 }
 
-var pendingCmd = &cobra.Command{
-	Use:   "pending",
-	Short: "Show pending pull request reviews",
+var reviewCmd = &cobra.Command{
+	Use:   "review",
+	Short: "Show pull requests that require your review",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return commander.PrintPendingReviews(cmd.Context(), lines, false)
 	},
@@ -152,9 +160,10 @@ func main() {
 	rootCmd.AddCommand(checkoutCmd)
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(approveCmd)
-	rootCmd.AddCommand(pendingCmd)
+	rootCmd.AddCommand(reviewCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(pushCmd)
 	rootCmd.AddCommand(showCmd)
 
 	if err := rootCmd.Execute(); err != nil {

@@ -44,6 +44,27 @@ func PushToOrigin() error {
 	return nil
 }
 
+func UpdateOrigin() error {
+	defaultBranch, err := GetDefaultBranch()
+	if err != nil {
+		return err
+	}
+	branch, err := CurrentBranch()
+	if err != nil {
+		return err
+	}
+	if branch == defaultBranch {
+		return fmt.Errorf("UpdateOrigin: not supported for default branch %q", defaultBranch)
+	}
+	cmd := exec.Command("git", "push", "origin", branch, "--force-with-lease")
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("UpdateOrigin: %s: %s", cmd.String(), string(b))
+	}
+	fmt.Println(string(b))
+	return nil
+}
+
 func CheckoutPullRequest(pr int) error {
 	if _, err := exec.Command("git", "fetch", "origin", "pull/"+fmt.Sprint(pr)+"/head").CombinedOutput(); err != nil {
 		return err
