@@ -22,6 +22,21 @@ query fetchPullRequests($owner: String!, $name: String!, $limit: Int!, $states: 
           comments {
             totalCount
           }
+          commits(last: 1) {
+            nodes {
+              commit {
+                status {
+                  state
+                  contexts {
+                    state
+                    context
+                    description
+                    targetUrl
+                  }
+                }
+              }
+            }
+          }
           repository {
             name
           }

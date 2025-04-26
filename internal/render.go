@@ -38,9 +38,11 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 	}
 
 	fmt.Print("\r") // TODO: cross-platform
+
+	red := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("1"))
 	green := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("2"))
-
 	yellow := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("3"))
 
@@ -86,7 +88,13 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 			pr.Title = pr.Title[:80] + "…"
 		}
 
+		statusCheckIcon := green.Render("✓")
+		if !statusChecksPassing(pr) {
+			statusCheckIcon = red.Render("✗")
+		}
+
 		mailIcon := white.Render("✉")
+
 		comments := white.Render(fmt.Sprintf("%3d", numComments))
 		if participating {
 			mailIcon = green.Render("✉")
@@ -97,13 +105,14 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 			}
 		}
 
-		fmt.Fprintf(writer, "%s\t%s\t%s\t%v %s\t%v",
+		fmt.Fprintf(writer, "%s\t%s\t%s\t%v %s\t%v %s",
 			white.Render(fmt.Sprint(pr.Number)),
 			author,
 			white.Render(pr.Title),
 			comments,
 			mailIcon,
 			white.Render(getAge(createdAt, true)),
+			statusCheckIcon,
 		)
 
 		if differentRepositories {
@@ -113,6 +122,27 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 		fmt.Fprint(writer, "\n")
 	}
 	return writer.Flush()
+}
+
+func statusChecksPassing(pr *PullRequest) bool {
+	if pr.Commits == nil {
+		return true
+	}
+	for _, node := range pr.Commits.Nodes {
+		if node.Commit.Status == nil {
+			// Not every commit has a status associated with it.
+			continue
+		}
+		for _, context := range node.Commit.Status.Contexts {
+			if context.State == StatusStateFailure {
+				return false
+			}
+			if context.State == StatusStateFailure {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func printComments(pr *PullRequest, comments []*comment) error {
