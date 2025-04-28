@@ -89,7 +89,10 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 		}
 
 		statusCheckIcon := green.Render("✓")
-		if !statusChecksPassing(pr) {
+		switch statusCheck(pr) {
+		case StatusStatePending:
+			statusCheckIcon = yellow.Render("❍")
+		case StatusStateFailure:
 			statusCheckIcon = red.Render("✗")
 		}
 
@@ -124,9 +127,9 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 	return writer.Flush()
 }
 
-func statusChecksPassing(pr *PullRequest) bool {
+func statusCheck(pr *PullRequest) StatusState {
 	if pr.Commits == nil {
-		return true
+		return StatusStateSuccess
 	}
 	for _, node := range pr.Commits.Nodes {
 		if node.Commit.Status == nil {
@@ -134,15 +137,12 @@ func statusChecksPassing(pr *PullRequest) bool {
 			continue
 		}
 		for _, context := range node.Commit.Status.Contexts {
-			if context.State == StatusStateFailure {
-				return false
-			}
-			if context.State == StatusStateFailure {
-				return false
+			if context.State != StatusStateSuccess {
+				return context.State
 			}
 		}
 	}
-	return true
+	return StatusStateSuccess
 }
 
 func printComments(pr *PullRequest, comments []*comment) error {
