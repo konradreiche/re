@@ -90,20 +90,20 @@ func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 
 		statusCheckIcon := green.Render("✓")
 		switch statusCheck(pr) {
-		case StatusStatePending:
-			statusCheckIcon = yellow.Render("❍")
-		case StatusStateFailure:
+		case StatusStatePending, StatusStateExpected:
+			statusCheckIcon = yellow.Render("◯")
+		case StatusStateFailure, StatusStateError:
 			statusCheckIcon = red.Render("✗")
 		}
 
-		mailIcon := white.Render("✉")
+		mailIcon := white.Render("🗨")
 
 		comments := white.Render(fmt.Sprintf("%3d", numComments))
 		if participating {
-			mailIcon = green.Render("✉")
+			mailIcon = green.Render("🗨")
 			comments = green.Render(fmt.Sprintf("%3d", numComments))
 			if !lastCommentByMe {
-				mailIcon = yellow.Render("✉")
+				mailIcon = yellow.Render("🗨")
 				comments = yellow.Render(fmt.Sprintf("%3d", numComments))
 			}
 		}
