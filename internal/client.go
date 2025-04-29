@@ -222,23 +222,16 @@ func getAge(createdAt time.Time, align bool) string {
 	}
 
 	d := time.Since(createdAt)
-
-	if d > 0 {
-		if d.Hours() > 24 {
-			days := int(d.Hours() / 24)
-			if days > 365 {
-				return fmt.Sprintf(alignFormat+"y ago", int(days/365))
-			}
-			return fmt.Sprintf(alignFormat+"d ago", days)
-		} else if d.Hours() > 1 {
-			return fmt.Sprintf(alignFormat+"h ago", int(math.Ceil(d.Hours())))
+	if d.Hours() > 24 {
+		days := int(d.Hours() / 24)
+		if days > 365 {
+			return fmt.Sprintf(alignFormat+"y ago", int(days/365))
 		}
-		return fmt.Sprintf(alignFormat+"m ago", int(d.Minutes()))
+		return fmt.Sprintf(alignFormat+"d ago", days)
+	} else if d.Hours() > 1 {
+		return fmt.Sprintf(alignFormat+"h ago", int(math.Ceil(d.Hours())))
 	}
-	if d.Hours() < 24 {
-		return fmt.Sprintf(alignFormat+"h due", int(math.Abs(math.Ceil(d.Hours()))))
-	}
-	return "test"
+	return fmt.Sprintf(alignFormat+"m ago", int(d.Minutes()))
 }
 
 type comment struct {
