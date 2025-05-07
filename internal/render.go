@@ -20,9 +20,17 @@ var stylesheet embed.FS
 var (
 	yellow = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("3"))
+	blue = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("4"))
 	white = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("15"))
 )
+
+func (c *Client) printNotificationHeader(notification Notification, pr int) error {
+	header := fmt.Sprintf(blue.Render("%d: %s"), pr, notification.Subject.Title)
+	fmt.Println(header)
+	return nil
+}
 
 func (c *Client) printPullRequests(pullRequestEdges []*PullRequestEdge) error {
 	var differentRepositories bool

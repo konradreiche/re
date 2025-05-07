@@ -10,6 +10,8 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	gqlclient "git.sr.ht/~emersion/gqlclient"
@@ -157,13 +159,15 @@ func (c *Client) FetchMyPullRequestReviewQueue(ctx context.Context, query, repos
 type Notification struct {
 	Reason  string `json:"reason"`
 	Subject struct {
-		Title string `json:"title"`
-		URL   string `json:"url"`
+		Title            string `json:"title"`
+		URL              string `json:"url"`
+		LatestCommentURL string `json:"latest_comment_url"`
 	} `json:"subject"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 func (c *Client) FetchNotifiations(ctx context.Context) error {
-	url := c.endpoint + "/notifications"
+	url := c.endpoint + "/notifications?participating=true&all=true"
 	resp, err := c.client.Get(url)
 	if err != nil {
 		return err
@@ -175,12 +179,40 @@ func (c *Client) FetchNotifiations(ctx context.Context) error {
 	if err := json.NewDecoder(resp.Body).Decode(&notifications); err != nil {
 		return err
 	}
+
+	sort.Slice(notifications, func(i, j int) bool {
+		return notifications[i].UpdatedAt > notifications[j].UpdatedAt
+	})
+
 	for _, notification := range notifications {
-		fmt.Println(notification.Subject.Title)
-		fmt.Println(notification.Subject.URL)
-		fmt.Println()
+		// Skip reason "review requested".
+		if notification.Reason == "review_requested" {
+			continue
+		}
+		// Skip notifications related to commits, such as "mention" in commit
+		// messages.
+		split := strings.Split(notification.Subject.URL, "/")
+		if split[len(split)-2] == "commits" {
+			continue
+		}
+		name, owner, number := extractOwnerAndPR(notification.Subject.URL)
+		c.printNotificationHeader(notification, number)
+		c.FetchComments(ctx, number, name, owner, WithLast(1))
 	}
 	return nil
+}
+
+func extractOwnerAndPR(url string) (owner, name string, number int) {
+	split := strings.Split(url, "/")
+	pr := split[len(split)-1]
+	name = split[len(split)-3]
+	owner = split[len(split)-4]
+
+	number, err := strconv.Atoi(pr)
+	if err != nil {
+		panic(err)
+	}
+	return owner, name, number
 }
 
 func (c *Client) getLastReviewRequested(items []*PullRequestTimelineItems) DateTime {
@@ -291,7 +323,11 @@ func (c *Client) FetchDescription(ctx context.Context, number int32, name, owner
 	return printDescription(respository.PullRequest)
 }
 
-func (c *Client) FetchComments(ctx context.Context, number int, name, owner string) error {
+func (c *Client) FetchComments(ctx context.Context, number int, name, owner string, opts ...Option) error {
+	cfg := options{}
+	if err := WithOptions(opts...)(&cfg); err != nil {
+		return err
+	}
 	repository, err := FetchConversation(c.gql, ctx, int32(number), name, owner)
 	if err != nil {
 		return err
@@ -328,10 +364,15 @@ func (c *Client) FetchComments(ctx context.Context, number int, name, owner stri
 	sort.Slice(comments, func(i, j int) bool {
 		return comments[i].createdAt.Before(comments[j].createdAt)
 	})
+
+	if cfg.last > 0 {
+		comments = comments[len(comments)-cfg.last:]
+	}
+
 	return printComments(repository.PullRequest, comments)
 }
 
-var clientID = "td"
+var clientID = "re"
 
 func (c *Client) MarkAsReady(ctx context.Context, owner, name string, number int) error {
 	repository, err := FetchPullRequestID(c.gql, ctx, owner, name, int32(number))
@@ -357,4 +398,33 @@ func (t *authenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 	req.Header.Add("Accept", "application/vnd.github.v3+json")
 	req.Header.Add("Authorization", "Bearer "+t.accessToken)
 	return t.transport.RoundTrip(req)
+}
+
+type options struct {
+	last int
+}
+
+// Option is a functional option for flexible and extensible configuration of
+// different client actions, allowing modification of internal state or
+// behavior during construction.
+type Option func(*options) error
+
+func WithLast(last int) Option {
+	return func(o *options) error {
+		o.last = last
+		return nil
+	}
+}
+
+// WithOption permits aggregating multiple options together, and is useful to
+// avoid having to append options when creating helper functions or wrappers.
+func WithOptions(opts ...Option) Option {
+	return func(o *options) error {
+		for _, opt := range opts {
+			if err := opt(o); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
