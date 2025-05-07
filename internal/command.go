@@ -49,6 +49,10 @@ func (c *Command) PrintComments(ctx context.Context, pr int) error {
 	return c.client.FetchComments(ctx, pr, c.org, c.name)
 }
 
+func (c *Command) PrintNotifications(ctx context.Context) error {
+	return c.client.FetchNotifiations(ctx)
+}
+
 func (c *Command) PrintPendingReviews(ctx context.Context, limit int, includeTeamReview bool) error {
 	query := "is:pr is:open user-review-requested:@me"
 	if includeTeamReview {

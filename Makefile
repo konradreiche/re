@@ -1,6 +1,6 @@
 .PHONY: build
 build: gen
-	go build -o td ./cmd/td.go
+	go build ./cmd/re/re.go
 
 .PHONY: gen
 gen:

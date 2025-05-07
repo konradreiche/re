@@ -154,6 +154,35 @@ func (c *Client) FetchMyPullRequestReviewQueue(ctx context.Context, query, repos
 	return c.printPullRequests(edges)
 }
 
+type Notification struct {
+	Reason  string `json:"reason"`
+	Subject struct {
+		Title string `json:"title"`
+		URL   string `json:"url"`
+	} `json:"subject"`
+}
+
+func (c *Client) FetchNotifiations(ctx context.Context) error {
+	url := c.endpoint + "/notifications"
+	resp, err := c.client.Get(url)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(resp.Status)
+	}
+	var notifications []Notification
+	if err := json.NewDecoder(resp.Body).Decode(&notifications); err != nil {
+		return err
+	}
+	for _, notification := range notifications {
+		fmt.Println(notification.Subject.Title)
+		fmt.Println(notification.Subject.URL)
+		fmt.Println()
+	}
+	return nil
+}
+
 func (c *Client) getLastReviewRequested(items []*PullRequestTimelineItems) DateTime {
 	for i := len(items) - 1; i >= 0; i-- {
 		item := items[i]

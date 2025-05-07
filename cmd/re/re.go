@@ -83,6 +83,14 @@ var checkoutCmd = &cobra.Command{
 	},
 }
 
+var inboxCmd = &cobra.Command{
+	Use:   "inbox",
+	Short: "List notifications",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return commander.PrintNotifications(cmd.Context())
+	},
+}
+
 var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List pull requests",
@@ -162,6 +170,7 @@ func main() {
 	rootCmd.AddCommand(approveCmd)
 	rootCmd.AddCommand(reviewCmd)
 	rootCmd.AddCommand(openCmd)
+	rootCmd.AddCommand(inboxCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(pushCmd)
 	rootCmd.AddCommand(showCmd)
