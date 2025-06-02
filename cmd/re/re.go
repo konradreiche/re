@@ -136,12 +136,18 @@ var reviewCmd = &cobra.Command{
 }
 
 func newCommander(cmd *cobra.Command, args []string) error {
-	if cmd.Name() == "re" {
+	// TODO: Consider using command annotations to store whether a git repository
+	// is required to simplify this logic.
+	requireGit := true
+	switch cmd.Name() {
+	case "re":
 		return nil
+	case "review", "inbox":
+		requireGit = false
 	}
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
-	commands, err := re.NewCommand(cmd.Context(), re.NewConfig())
+	commands, err := re.NewCommand(cmd.Context(), re.NewConfig(), re.WithRequireGit(requireGit))
 	if err != nil {
 		return err
 	}

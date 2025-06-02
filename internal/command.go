@@ -13,20 +13,27 @@ type Command struct {
 	name   string
 }
 
-func NewCommand(ctx context.Context, config Config) (*Command, error) {
+func NewCommand(ctx context.Context, config Config, opts ...CommandOption) (*Command, error) {
+	cfg := commandOptions{}
+	if err := WithCommandOptions(opts...)(&cfg); err != nil {
+		return nil, err
+	}
 	client, err := NewClient(ctx, config)
 	if err != nil {
 		return nil, err
 	}
-	org, name, err := GetRepositoryAndOrgName()
-	if err != nil {
-		return nil, err
-	}
-	return &Command{
+	command := &Command{
 		client: client,
-		org:    org,
-		name:   name,
-	}, nil
+	}
+	if cfg.requireGit {
+		org, name, err := GetRepositoryAndOrgName()
+		if err != nil {
+			return nil, err
+		}
+		command.org = org
+		command.name = name
+	}
+	return command, nil
 }
 
 func (c *Command) ApprovePullRequest(ctx context.Context, pr int, message string) error {
@@ -112,4 +119,34 @@ func (c *Command) CreatePullRequest(ctx context.Context) error {
 
 func (c *Command) PushBranch(ctx context.Context) error {
 	return UpdateOrigin()
+}
+
+type commandOptions struct {
+	requireGit bool
+}
+
+func WithRequireGit(enabled bool) CommandOption {
+	return func(o *commandOptions) error {
+		o.requireGit = enabled
+		return nil
+	}
+}
+
+// CommandOption is a functional option for flexible and extensible
+// configuration of [*Command], allowing modification of internal state or
+// behavior during construction.
+type CommandOption func(*commandOptions) error
+
+// WithCommandOptions permits aggregating multiple options together, and is
+// useful to avoid having to append options when creating helper functions or
+// wrappers.
+func WithCommandOptions(opts ...CommandOption) CommandOption {
+	return func(o *commandOptions) error {
+		for _, opt := range opts {
+			if err := opt(o); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
