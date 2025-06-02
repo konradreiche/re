@@ -181,7 +181,7 @@ func (c *Client) FetchNotifiations(ctx context.Context) error {
 	}
 
 	sort.Slice(notifications, func(i, j int) bool {
-		return notifications[i].UpdatedAt > notifications[j].UpdatedAt
+		return notifications[i].UpdatedAt < notifications[j].UpdatedAt
 	})
 
 	for _, notification := range notifications {

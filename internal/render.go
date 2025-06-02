@@ -27,7 +27,11 @@ var (
 )
 
 func (c *Client) printNotificationHeader(notification Notification, pr int) error {
-	header := fmt.Sprintf(blue.Render("%d: %s"), pr, notification.Subject.Title)
+	updatedAt, err := time.Parse(time.RFC3339, notification.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	header := fmt.Sprintf(blue.Render("%d: %s (%v)"), pr, notification.Subject.Title, time.Since(updatedAt))
 	fmt.Println(header)
 	return nil
 }
