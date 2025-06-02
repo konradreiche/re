@@ -125,34 +125,13 @@ func (c *Client) FetchMyPullRequestReviewQueue(ctx context.Context, query, repos
 	if err != nil {
 		return err
 	}
-
 	edges := make([]*PullRequestEdge, len(result.Edges))
 	for i, edge := range result.Edges {
 		pr := edge.Node.Value.(*PullRequest)
-		if lastReviewAt := c.getLastReviewRequested(pr.TimelineItems.Nodes); lastReviewAt != "" {
-			lastReview, err := time.Parse(time.RFC3339, string(lastReviewAt))
-			if err != nil {
-				return err
-			}
-			pr.CreatedAt = DateTime(ReviewDue(lastReview).Format(time.RFC3339))
-		}
-
 		edges[i] = &PullRequestEdge{
 			Node: pr,
 		}
 	}
-	sort.Slice(edges, func(i, j int) bool {
-		a, err := time.Parse(time.RFC3339, string(edges[i].Node.CreatedAt))
-		if err != nil {
-			panic(err)
-		}
-		b, err := time.Parse(time.RFC3339, string(edges[j].Node.CreatedAt))
-		if err != nil {
-			panic(err)
-		}
-		return a.Before(b)
-	})
-
 	return c.printPullRequests(edges)
 }
 

@@ -61,9 +61,9 @@ func (c *Command) PrintNotifications(ctx context.Context) error {
 }
 
 func (c *Command) PrintPendingReviews(ctx context.Context, limit int, includeTeamReview bool) error {
-	query := "is:pr is:open user-review-requested:@me"
+	query := "is:pr is:open user-review-requested:@me sort:created-asc"
 	if includeTeamReview {
-		query = "is:pr is:open review-requested:@me"
+		query = "is:pr is:open review-requested:@me sort:created-asc"
 	}
 	return c.client.FetchMyPullRequestReviewQueue(ctx, query, c.name, limit)
 }
